@@ -30,8 +30,8 @@ Map credentials = [
 
 Map data = [
     "paypal": [],
-    "corp":[],
-    "lb":[]
+    "paypalcorp":[],
+    "paypallb":[]
 ]
 
 def resourcePath = "/metrics/usage"
@@ -73,17 +73,20 @@ credentials.each{ entry ->
     response = httpclient.execute(httpGet);
     responseBody = EntityUtils.toString(response.getEntity());
     code = response.getStatusLine().getStatusCode();
-            
     json_slurper = new JsonSlurper();
     response_obj = json_slurper.parseText(responseBody);
-    println response_obj
+  
+
+    account = entry.value.account
+
+    data[account] = response_obj
 
     httpclient.close()
 
     
 }
 
-
+println data
 return 0 //Exit Successfully
 
 
