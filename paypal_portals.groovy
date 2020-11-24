@@ -32,31 +32,37 @@ Map data = [
     "corp":[],
     "lb":[]
 ]
-resourcePath = "/metrics/usage"
+def resourcePath = "/metrics/usage"
 //get current time
-epoch = System.currentTimeMillis()
 //calculate signature
-requestVars = "GET" + epoch + resourcePath
 //define API endpoint path
-hmac = Mac.getInstance("HmacSHA256")
-CloseableHttpClient httpclient = HttpClients.createDefault()
 if (credentials.paypal.id && credentials.corp.id && credentials.lb.id) {
     //loop through credentials to build URL for each respective portal
-    for(p in credentials) {
+    credentials.each { p ->
+        url = "https://" + p.value.account + ".logicmonitor.com" + "/santaba/rest" + resourcePath
+
+        epoch = System.currentTimeMillis()
+        requestVars = "GET" + epoch + resourcePath
+        hmac = Mac.getInstance("HmacSHA256")
         secret = new SecretKeySpec((p.value.key).getBytes(), "HmacSHA256")
         hmac.init(secret)
         hmac_signed = Hex.encodeHexString(hmac.doFinal(requestVars.getBytes()))
         signature = hmac_signed.bytes.encodeBase64()
-        url = "https://" + p.value.account + ".logicmonitor.com" + "/santaba/rest" + resourcePath
+
         //HTTP Get
+        CloseableHttpClient httpclient = HttpClients.createDefault()
         httpGet = new HttpGet(url)
         httpGet.addHeader("Authorization","LMv1" + "$p.value.id" + ":" + signature + ":" + epoch)
         httpGet.addHeader("X-Version","2")
-        try {response = httpclient.execute(httpGet)}
-        catch (Exception e){println(e);return 1}
-        responseBody = EntityUtils.toString(response.getEntity())
-        code = response.getStatusLine().getStatusCode()
-        println(responseBody)
+        try {
+            response = httpclient.execute(httpGet)
+            responseBody = EntityUtils.toString(response.getEntity())
+            code = response.getStatusLine().getStatusCode()
+            println(responseBody)
+        } catch (Exception e){
+            println(e, "ERROR????");return 1
+        }
+        
         //user groovy slurper
         if (code == "200"){
           json_slurper = new JsonSlurper()
@@ -65,6 +71,7 @@ if (credentials.paypal.id && credentials.corp.id && credentials.lb.id) {
         } else {
           return code
         }
+        httpclient.close()
     }
 } else {
     println("Device is not configured with the necessary portal credentials to proceed with API queries.\n" +
@@ -72,4 +79,3 @@ if (credentials.paypal.id && credentials.corp.id && credentials.lb.id) {
 }
 return 0 //Exit Successfully
 data.each() {k, v -> println("$k=$v")}
-httpclient.close()
