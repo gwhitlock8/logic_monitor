@@ -31,7 +31,7 @@ requestVars = "POST" + epoch + data + resourcePath;
 
 // construct signature
 hmac = Mac.getInstance("HmacSHA256");
-secret = new SecretKeySpec(accessKey.getBytes(), "HmacSHA256");
+secret = new SecretKeySpec(apiKey.getBytes(), "HmacSHA256");
 hmac.init(secret);
 hmac_signed = Hex.encodeHexString(hmac.doFinal(requestVars.getBytes()));
 signature = hmac_signed.bytes.encodeBase64();
@@ -39,7 +39,7 @@ signature = hmac_signed.bytes.encodeBase64();
 // HTTP POST
 CloseableHttpClient httpclient = HttpClients.createDefault();
 http_request = new HttpPost(url);
-http_request.setHeader("Authorization" , "LMv1 " + accessId + ":" + signature + ":" + epoch);
+http_request.setHeader("Authorization" , "LMv1 " + apiId + ":" + signature + ":" + epoch);
 http_request.setHeader("Accept", "application/json");
 http_request.setHeader("Content-type", "application/json");
 http_requst.setHeader("X-Version","3");
