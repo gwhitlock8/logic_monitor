@@ -19,7 +19,7 @@ def portalName = hostProps.get("lmaccount")
 
 def resourcePath = "/functions"
 
-def url = "https://" + account + ".logicmonitor.com" + "/santaba/rest" + resourcePath
+def url = "https://" + portalName + ".logicmonitor.com" + "/santaba/rest" + resourcePath
 
 def appliesTo = "\"auto.endpoint.model =~\\\"DCS-7060CX2-32S|DCS-7010T-48|DCS-7050SX|DCS-7050TX|DCS-7504|DCS-7508\\\" && auto.entphysical.softwarerev == \\\"4.22.7.1M\\\"\",\"currentAppliesTo\":\"auto.endpoint.model =~ \\\"DCS-7060CX2-32S|DCS-7010T-48|DCS-7050SX|DCS-7050TX|DCS-7504|DCS-7508\\\" && auto.entphysical.softwarerev == \\\"4.22.7.1M\\\"\""
 
