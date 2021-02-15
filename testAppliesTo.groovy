@@ -42,7 +42,7 @@ http_request = new HttpPost(url);
 http_request.setHeader("Authorization" , "LMv1 " + apiId + ":" + signature + ":" + epoch);
 http_request.setHeader("Accept", "application/json");
 http_request.setHeader("Content-type", "application/json");
-http_requst.setHeader("X-Version","3");
+http_request.setHeader("X-Version","3");
 http_request.setEntity(params);
 response = httpclient.execute(http_request);
 responseBody = EntityUtils.toString(response.getEntity());
