@@ -1,8 +1,7 @@
-
 import groovy.json.JsonSlurper
 import org.apache.http.HttpEntity
 import org.apache.http.client.methods.CloseableHttpResponse
-import org.apache.http.client.methods.HttpPut
+import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
@@ -37,9 +36,9 @@ hmac.init(secret);
 hmac_signed = Hex.encodeHexString(hmac.doFinal(requestVars.getBytes()));
 signature = hmac_signed.bytes.encodeBase64();
 
-// HTTP PUT
+// HTTP POST
 CloseableHttpClient httpclient = HttpClients.createDefault();
-http_request = new HttpPosturl);
+http_request = new HttpPost(url);
 http_request.setHeader("Authorization" , "LMv1 " + accessId + ":" + signature + ":" + epoch);
 http_request.setHeader("Accept", "application/json");
 http_request.setHeader("Content-type", "application/json");
