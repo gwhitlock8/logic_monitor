@@ -1,54 +1,59 @@
-import groovy.json.JsonSlurper
-import org.apache.http.HttpEntity
-import org.apache.http.client.methods.CloseableHttpResponse
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.impl.client.CloseableHttpClient
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.util.EntityUtils
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
+import javax.crypto.Mac
+import org.apache.commons.codec.binary.Hex
+import javax.crypto.spec.SecretKeySpec
+import groovy.json.*
+import org.apache.http.client.methods.*
+import org.apache.http.entity.*
+import org.apache.http.impl.client.*
 
-
-
-def apiId = hostProps.get("lmaccess.id")
-def apiKey = hostProps.get("lmaccess.key")
+String apiId = hostProps.get("lmaccess.id")
+String apiKey = hostProps.get("lmaccess.key")
 def portalName = hostProps.get("lmaccount")
+String endPoint = "/functions"
+String appliesTo = "auto.endpoint.model =~\"DCS-7060CX2-32S|DCS-7010T-48|DCS-7050SX|DCS-7050TX|DCS-7504|DCS-7508\" && auto.entphysical.softwarerev == \"4.22.7.1M\""
 
-def resourcePath = "/functions"
+def map = [:]
+map["type"] = "testAppliesTo"
+map["originalAppliesTo"] = appliesTo
+map["currentAppliesTo"] = appliesTo
+map["needInheritProps"] = true
 
-def url = "https://" + portalName + ".logicmonitor.com" + "/santaba/rest" + resourcePath
+def jsonBody = new JsonBuilder(map).toString()
 
-def appliesTo = "\"auto.endpoint.model =~\\\"DCS-7060CX2-32S|DCS-7010T-48|DCS-7050SX|DCS-7050TX|DCS-7504|DCS-7508\\\" && auto.entphysical.softwarerev == \\\"4.22.7.1M\\\"\",\"currentAppliesTo\":\"auto.endpoint.model =~ \\\"DCS-7060CX2-32S|DCS-7010T-48|DCS-7050SX|DCS-7050TX|DCS-7504|DCS-7508\\\" && auto.entphysical.softwarerev == \\\"4.22.7.1M\\\"\""
+def generateAuth(id, key, path, data) {
+    Long epoch_time = System.currentTimeMillis()    // Get current system time (epoch time)
+    Mac hmac = Mac.getInstance("HmacSHA256")
+    hmac.init(new SecretKeySpec(key.getBytes(), "HmacSHA256"))
 
-def data = "{\"type\":\"testAppliesTo\",\"originalAppliesTo\":${appliesTo},\"needInheritProps\":true}";
+    def signature = Hex.encodeHexString(hmac.doFinal("POST${epoch_time}${data}${path}".getBytes())).bytes.encodeBase64()
 
-epoch = System.currentTimeMillis(); //get current time
+    return "LMv1 ${id}:${signature}:${epoch_time}"
+}
 
-requestVars = "POST" + epoch + data + resourcePath;
 
-// construct signature
-hmac = Mac.getInstance("HmacSHA256");
-secret = new SecretKeySpec(apiKey.getBytes(), "HmacSHA256");
-hmac.init(secret);
-hmac_signed = Hex.encodeHexString(hmac.doFinal(requestVars.getBytes()));
-signature = hmac_signed.bytes.encodeBase64();
 
-// HTTP POST
-CloseableHttpClient httpclient = HttpClients.createDefault();
-http_request = new HttpPost(url);
-http_request.setHeader("Authorization" , "LMv1 " + apiId + ":" + signature + ":" + epoch);
-http_request.setHeader("Accept", "application/json");
-http_request.setHeader("Content-type", "application/json");
-http_request.setHeader("X-Version","3");
-http_request.setEntity(params);
-response = httpclient.execute(http_request);
-responseBody = EntityUtils.toString(response.getEntity());
-code = response.getStatusLine().getStatusCode();
 
-// Print Response
-println "Status:" + code;
-println "Response body:" + responseBody;
-httpclient.close(); 
+//build HTTP POST
+def url = "https://${portalName}.logicmonitor.com/santaba/rest${endPoint}"
+def post = new HttpPost(url)
+def auth = generateAuth(apiId,apiKey,endPoint,jsonBody)
+
+post.addHeader("Authorization",auth)
+post.addHeader("Content-Type", "application/json")
+post.addHeader("X-Version", "3")
+post.setEntity(new StringEntity(jsonBody))
+
+//execute
+def client = HttpClientBuilder.create().build()
+def response = client.execute(post)
+
+def bufferedReader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))
+def jsonResponse = bufferedReader.getText()
+println "response: \n" + jsonResponse["originalMatches"].size()
+def slurper = new JsonSlurper()
+def resultMap = slurper.parseText(jsonResponse)
+
+return 0
+
+
+
