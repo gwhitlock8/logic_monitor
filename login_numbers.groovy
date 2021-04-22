@@ -21,6 +21,11 @@ def queryParams = '?fields=description,username,happenedOnLocal&filter=_all~sign
 def resourcePath = "/setting/accesslogs";
 def url = "https://" + account + ".logicmonitor.com" + "/santaba/rest" + resourcePath + queryParams;
 
+def currentDate = new Date().format('yyyyMMdd')
+
+//scriptCache for adding up logins in month
+def scriptCache
+
 //get current time
 epoch = System.currentTimeMillis();
 
@@ -37,6 +42,15 @@ signature = hmac_signed.bytes.encodeBase64();
 CloseableHttpClient httpclient = HttpClients.createDefault();
 httpGet = new HttpGet(url);
 httpGet.addHeader("Authorization" , "LMv1 " + accessId + ":" + signature + ":" + epoch);
+httpGet.addHeader("X-Version","2")
+try {
+  response = httpclient.execute(httpGet);
+  responseBody = EntityUtils.toString(response.getEntity());
+  code = response.getStatusLine().getStatusCode();
+
+} catch (Exception err) {
+  println("ERROR: Script failed while attempting to query $url API endpoint...\n${err?.message}")
+}
 response = httpclient.execute(httpGet);
 responseBody = EntityUtils.toString(response.getEntity());
 code = response.getStatusLine().getStatusCode();

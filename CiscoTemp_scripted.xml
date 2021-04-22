@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<feed  version="1.0" hasPendingRequests="false" >
+  <company></company>
+  <status>200</status>
+  <errmsg>OK</errmsg>
+  <interval>0</interval>
+    <entry type="predatasource">
+        <version>1619112723</version>
+        <name>CiscoTemp_scripted</name>
+        <displayedas>CiscoTemp_scripted</displayedas>
+        <description>Custom script based Ds written by David Lee Unsupported</description>
+        <collector>script</collector>
+        <hasMultiInstances>true</hasMultiInstances>
+        <schedule>300</schedule>
+        <appliesTo>system.displayname == &#34;pvg7-19-ca01.net.paypalcorp.com&#34;</appliesTo>
+        <wildcardauto>true</wildcardauto>
+        <wildcardpersist>false</wildcardpersist>
+        <wildcardlinuxscript>ad_script</wildcardlinuxscript>
+        <wildcardlinuxcmdline>type=&#34;embeded&#34; </wildcardlinuxcmdline>
+        <wildcardwinscript>ad_script</wildcardwinscript>
+        <wildcardwincmdline>type=&#34;embeded&#34; </wildcardwincmdline>
+        <wildcardgroovyscript>// import the logicmonitor snmp helper class
+import com.santaba.agent.groovyapi.snmp.Snmp;
+
+// get the snmp host &#38; community from the device properties
+def host = hostProps.get(&#39;system.hostname&#39;);
+
+
+// walk the oid tree
+def snmp_walk = Snmp.walk(host, &#34;.1.3.6.1.4.1.9.9.13.1.3.1.2&#34;);
+
+
+
+
+// iterate over each line returned by the oid tree
+snmp_walk.eachLine 
+{ line -&#62;
+    // tokenize the line, separating the leaf oid from its value
+    tokens = line.split(/ = /, 2);
+	wildvalue= tokens[0].replace(&#34;.1.3.6.1.4.1.9.9.13.1.3.1.2.&#34;,&#34;&#34;)
+  warningthreshold=1000
+    errorthreshold=1000
+      criticalthreshold=1000
+  if (tokens[1].contains(&#34;Air outlet&#34;))
+    {warningthreshold=70
+  errorthreshold=80
+  criticalthreshold=90
+    }
+	if (Snmp.get(host,&#34;.1.3.6.1.4.1.9.9.13.1.3.1.6.&#34;+wildvalue)!=5){
+    // print the value
+		println wildvalue+&#34;##&#34;+tokens[1]+&#34;######&#34;+&#34;auto.warningthreshold=&#34;+warningthreshold+&#34;&#38;auto.errorthreshold=&#34;+errorthreshold+&#34;&#38;auto.criticalthreshold=&#34;+criticalthreshold
+		}
+}
+
+// return with a response code that indicates we ran successfully
+return (0);</wildcardgroovyscript>
+        <wildcardschedule>1440</wildcardschedule>
+        <wildcarddisable>false</wildcarddisable>
+        <wildcarddeleteinactive>true</wildcarddeleteinactive>
+        <agdmethod>none</agdmethod>
+        <agdparams></agdparams>
+        <group>Custom_LM</group>
+        <tags></tags>
+        <technology>thresholds of 1000 indicate the threshold has not been set in the AD script as yet</technology>
+        <adlist><![CDATA[{"agdmethod":"none","method":"ad_script","agdparams":"","id":0,"filters":[],"params":{"type":"embeded","groovyscript":"// import the logicmonitor snmp helper class\nimport com.santaba.agent.groovyapi.snmp.Snmp;\n\n// get the snmp host & community from the device properties\ndef host = hostProps.get('system.hostname');\n\n\n// walk the oid tree\ndef snmp_walk = Snmp.walk(host, \".1.3.6.1.4.1.9.9.13.1.3.1.2\");\n\n\n\n\n// iterate over each line returned by the oid tree\nsnmp_walk.eachLine \n{ line ->\n    // tokenize the line, separating the leaf oid from its value\n    tokens = line.split(/ = /, 2);\n\twildvalue= tokens[0].replace(\".1.3.6.1.4.1.9.9.13.1.3.1.2.\",\"\")\n  warningthreshold=1000\n    errorthreshold=1000\n      criticalthreshold=1000\n  if (tokens[1].contains(\"Air outlet\"))\n    {warningthreshold=70\n  errorthreshold=80\n  criticalthreshold=90\n    }\n\tif (Snmp.get(host,\".1.3.6.1.4.1.9.9.13.1.3.1.6.\"+wildvalue)!=5){\n    // print the value\n\t\tprintln wildvalue+\"##\"+tokens[1]+\"######\"+\"auto.warningthreshold=\"+warningthreshold+\"&auto.errorthreshold=\"+errorthreshold+\"&auto.criticalthreshold=\"+criticalthreshold\n\t\t}\n}\n\n// return with a response code that indicates we ran successfully\nreturn (0);"}}]]></adlist>
+        <schemaVersion>2</schemaVersion>
+        <dataSourceType>1</dataSourceType>
+        <attributes>
+        <attribute>
+            <name>scripttype</name>
+            <value>embed</value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>scriptgroovy</name>
+            <value>// import the logicmonitor snmp helper class
+import com.santaba.agent.groovyapi.snmp.Snmp;
+
+// get the snmp host &#38; community from the device properties
+def host = hostProps.get(&#39;system.hostname&#39;);
+def wildvalue=&#34;##WILDVALUE##&#34;
+
+Temperature=Snmp.get(host,&#34;.1.3.6.1.4.1.9.9.13.1.3.1.3.&#34;+wildvalue)
+println &#34;Temperature=&#34;+Temperature
+
+TempState=Snmp.get(host,&#34;.1.3.6.1.4.1.9.9.13.1.3.1.6.&#34;+wildvalue)
+println &#34;TempState=&#34;+TempState</value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>windowsscript</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>linuxscript</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>windowscmdline</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>linuxcmdline</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        </attributes>
+        <datapoints>
+        <datapoint>
+            <name>ExitCode</name>
+            <dataType>4</dataType>
+            <type>2</type>
+            <postprocessormethod>none</postprocessormethod>
+            <postprocessorparam></postprocessorparam>
+            <usevalue>exitCode</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>Temperature</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>Temperature</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>TempState</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>TempState</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>criticalthreshold</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>expression</postprocessormethod>
+            <postprocessorparam>##auto.criticalthreshold##</postprocessorparam>
+            <usevalue></usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>errorthreshold</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>expression</postprocessormethod>
+            <postprocessorparam>##auto.errorthreshold##</postprocessorparam>
+            <usevalue></usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>warningthreshold</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>expression</postprocessormethod>
+            <postprocessorparam>##auto.warningthreshold##</postprocessorparam>
+            <usevalue></usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>alert</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>expression</postprocessormethod>
+            <postprocessorparam>if(gt(Temperature,criticalthreshold),3,if(gt(Temperature,errorthreshold),2,if(gt(Temperature,warningthreshold),1,0)))</postprocessorparam>
+            <usevalue></usevalue>
+            <alertexpr>= 1 2 3</alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        </datapoints>
+        <graphs>
+        </graphs>
+        <overviewgraphs>
+        </overviewgraphs>
+        <scripts>
+        </scripts>
+    </entry>
+</feed>

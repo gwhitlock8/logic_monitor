@@ -75,10 +75,13 @@ credentials.each{ entry ->
     code = response.getStatusLine().getStatusCode();
     json_slurper = new JsonSlurper();
     response_obj = json_slurper.parseText(responseBody);
-  
+
 
     account = entry.value.account
-
+    response_obj.each{datapoint -> 
+        data["$account" + "$datapoint.key"] = datapoint.value
+    }
+  
     data[account] = response_obj
 
     httpclient.close()
