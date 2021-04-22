@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<feed  version="1.0" hasPendingRequests="false" >
+  <company></company>
+  <status>200</status>
+  <errmsg>OK</errmsg>
+  <interval>0</interval>
+    <entry type="predatasource">
+        <version>1601294610</version>
+        <name>Dell_DRAC_IntrusionReadingScript</name>
+        <displayedas>Dell_DRAC_IntrusionReading</displayedas>
+        <description>status of system batteries as reported by iDRAC7 and newer that supports SNMP</description>
+        <collector>script</collector>
+        <hasMultiInstances>true</hasMultiInstances>
+        <schedule>300</schedule>
+        <appliesTo>(idrac.ip)</appliesTo>
+        <wildcardauto>true</wildcardauto>
+        <wildcardpersist>false</wildcardpersist>
+        <wildcardlinuxscript>ad_script</wildcardlinuxscript>
+        <wildcardlinuxcmdline>type=&#34;embeded&#34; </wildcardlinuxcmdline>
+        <wildcardwinscript>ad_script</wildcardwinscript>
+        <wildcardwincmdline>type=&#34;embeded&#34; </wildcardwincmdline>
+        <wildcardgroovyscript>import com.santaba.agent.groovyapi.expect.Expect;
+import com.santaba.agent.groovyapi.snmp.Snmp;
+import com.santaba.agent.groovyapi.http.*;
+import com.santaba.agent.groovyapi.jmx.*;
+import org.xbill.DNS.*;
+
+def ip = hostProps.get(&#34;idrac.ip&#34;);
+def oid=&#34;.1.3.6.1.4.1.674.10892.5.4.300.70.1.8.1&#34;
+// walk the oid tree
+def snmp_walk = Snmp.walk(ip, oid);
+
+
+
+
+// iterate over each line returned by the oid tree
+snmp_walk.eachLine 
+{ line -&#62;
+line=line.replace(oid+&#39;.&#39;,&#39;&#39;)
+
+    // tokenize the line, separating the leaf oid from its value
+    tokens = line.split(/ = /, 2);
+
+    // print the value
+    println tokens[0]+&#34;##&#34;+tokens[1]
+}
+
+// return with a response code that indicates we ran successfully
+return (0);</wildcardgroovyscript>
+        <wildcardschedule>1440</wildcardschedule>
+        <wildcarddisable>false</wildcarddisable>
+        <wildcarddeleteinactive>true</wildcarddeleteinactive>
+        <agdmethod>none</agdmethod>
+        <agdparams></agdparams>
+        <group>Dell_DRAC</group>
+        <tags></tags>
+        <technology></technology>
+        <adlist><![CDATA[{"agdmethod":"none","method":"ad_script","agdparams":"","id":0,"filters":[],"params":{"type":"embeded","groovyscript":"import com.santaba.agent.groovyapi.expect.Expect;\nimport com.santaba.agent.groovyapi.snmp.Snmp;\nimport com.santaba.agent.groovyapi.http.*;\nimport com.santaba.agent.groovyapi.jmx.*;\nimport org.xbill.DNS.*;\n\ndef ip = hostProps.get(\"idrac.ip\");\ndef oid=\".1.3.6.1.4.1.674.10892.5.4.300.70.1.8.1\"\n// walk the oid tree\ndef snmp_walk = Snmp.walk(ip, oid);\n\n\n\n\n// iterate over each line returned by the oid tree\nsnmp_walk.eachLine \n{ line ->\nline=line.replace(oid+'.','')\n\n    // tokenize the line, separating the leaf oid from its value\n    tokens = line.split(/ = /, 2);\n\n    // print the value\n    println tokens[0]+\"##\"+tokens[1]\n}\n\n// return with a response code that indicates we ran successfully\nreturn (0);"}}]]></adlist>
+        <schemaVersion>2</schemaVersion>
+        <dataSourceType>1</dataSourceType>
+        <attributes>
+        <attribute>
+            <name>scripttype</name>
+            <value>embed</value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>scriptgroovy</name>
+            <value>import com.santaba.agent.groovyapi.expect.Expect;
+import com.santaba.agent.groovyapi.snmp.Snmp;
+import com.santaba.agent.groovyapi.http.*;
+import com.santaba.agent.groovyapi.jmx.*;
+import org.xbill.DNS.*;
+
+def ip = hostProps.get(&#34;idrac.ip&#34;);
+
+// walk the oid tree
+def IntrusionReading= Snmp.get(ip, &#34;.1.3.6.1.4.1.674.10892.5.4.300.70.1.6.1.&#34;+&#34;##WILDVALUE##&#34;);
+
+
+println &#34;IntrusionReading=&#34;+IntrusionReading
+
+// return with a response code that indicates we ran successfully
+return (0);</value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>windowsscript</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>linuxscript</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>windowscmdline</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>linuxcmdline</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        </attributes>
+        <datapoints>
+        <datapoint>
+            <name>IntrusionReading</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>IntrusionReading</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        </datapoints>
+        <graphs>
+        </graphs>
+        <overviewgraphs>
+        </overviewgraphs>
+        <scripts>
+        </scripts>
+    </entry>
+</feed>

@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<feed  version="1.0" hasPendingRequests="false" >
+  <company></company>
+  <status>200</status>
+  <errmsg>OK</errmsg>
+  <interval>0</interval>
+    <entry type="predatasource">
+        <version>1601302791</version>
+        <name>Dell_DRAC_TemperaturesScript</name>
+        <displayedas>Dell_DRAC_Temperatures</displayedas>
+        <description>Temperature sensor data for Dell DRAC7 and newer.</description>
+        <collector>script</collector>
+        <hasMultiInstances>true</hasMultiInstances>
+        <schedule>300</schedule>
+        <appliesTo>(idrac.ip)</appliesTo>
+        <wildcardauto>true</wildcardauto>
+        <wildcardpersist>false</wildcardpersist>
+        <wildcardlinuxscript>ad_script</wildcardlinuxscript>
+        <wildcardlinuxcmdline>type=&#34;embeded&#34; </wildcardlinuxcmdline>
+        <wildcardwinscript>ad_script</wildcardwinscript>
+        <wildcardwincmdline>type=&#34;embeded&#34; </wildcardwincmdline>
+        <wildcardgroovyscript>import com.santaba.agent.groovyapi.expect.Expect;
+import com.santaba.agent.groovyapi.snmp.Snmp;
+import com.santaba.agent.groovyapi.http.*;
+import com.santaba.agent.groovyapi.jmx.*;
+import org.xbill.DNS.*;
+
+def ip = hostProps.get(&#34;idrac.ip&#34;);
+def oid=&#34;1.3.6.1.4.1.674.10892.5.4.700.20.1.8.1&#34;
+// walk the oid tree
+def snmp_walk = Snmp.walk(ip, oid);
+
+
+
+
+// iterate over each line returned by the oid tree
+snmp_walk.eachLine 
+{ line -&#62;
+line=line.replace(oid+&#39;.&#39;,&#39;&#39;)
+
+    // tokenize the line, separating the leaf oid from its value
+    tokens = line.split(/ = /, 2);
+
+    // print the value
+    println tokens[0]+&#34;##&#34;+tokens[1]
+}
+
+// return with a response code that indicates we ran successfully
+return (0);</wildcardgroovyscript>
+        <wildcardschedule>1440</wildcardschedule>
+        <wildcarddisable>false</wildcarddisable>
+        <wildcarddeleteinactive>true</wildcarddeleteinactive>
+        <agdmethod>none</agdmethod>
+        <agdparams></agdparams>
+        <group>Dell_DRAC</group>
+        <tags></tags>
+        <technology>- For ErrorTemperature and WarningTemperature: The value is the value over the threshold in degrees Celsius. This is set to 0 if there is no data collected.</technology>
+        <adlist><![CDATA[{"agdmethod":"none","method":"ad_script","agdparams":"","id":0,"filters":[],"params":{"type":"embeded","groovyscript":"import com.santaba.agent.groovyapi.expect.Expect;\nimport com.santaba.agent.groovyapi.snmp.Snmp;\nimport com.santaba.agent.groovyapi.http.*;\nimport com.santaba.agent.groovyapi.jmx.*;\nimport org.xbill.DNS.*;\n\ndef ip = hostProps.get(\"idrac.ip\");\ndef oid=\"1.3.6.1.4.1.674.10892.5.4.700.20.1.8.1\"\n// walk the oid tree\ndef snmp_walk = Snmp.walk(ip, oid);\n\n\n\n\n// iterate over each line returned by the oid tree\nsnmp_walk.eachLine \n{ line ->\nline=line.replace(oid+'.','')\n\n    // tokenize the line, separating the leaf oid from its value\n    tokens = line.split(/ = /, 2);\n\n    // print the value\n    println tokens[0]+\"##\"+tokens[1]\n}\n\n// return with a response code that indicates we ran successfully\nreturn (0);"}}]]></adlist>
+        <schemaVersion>2</schemaVersion>
+        <dataSourceType>1</dataSourceType>
+        <attributes>
+        <attribute>
+            <name>scripttype</name>
+            <value>embed</value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>scriptgroovy</name>
+            <value>import com.santaba.agent.groovyapi.expect.Expect;
+import com.santaba.agent.groovyapi.snmp.Snmp;
+import com.santaba.agent.groovyapi.http.*;
+import com.santaba.agent.groovyapi.jmx.*;
+import org.xbill.DNS.*;
+
+def ip = hostProps.get(&#34;idrac.ip&#34;);
+
+// walk the oid tree
+def TemperatureProbeUpperCriticalThreshold= Snmp.get(ip, &#34;.1.3.6.1.4.1.674.10892.5.4.700.20.1.10.1.&#34;+&#34;##WILDVALUE##&#34;);
+println &#34;TemperatureProbeUpperCriticalThreshold=&#34;+TemperatureProbeUpperCriticalThreshold
+try{
+def TemperatureProbeUpperNonCriticalThreshold= Snmp.get(ip, &#34;.1.3.6.1.4.1.674.10892.5.4.700.20.1.11.1.&#34;+&#34;##WILDVALUE##&#34;);
+println &#34;TemperatureProbeUpperNonCriticalThreshold=&#34;+TemperatureProbeUpperNonCriticalThreshold
+}
+catch (e){}
+def TemperatureTenthsCelsius= Snmp.get(ip, &#34;.1.3.6.1.4.1.674.10892.5.4.700.20.1.6.1.&#34;+&#34;##WILDVALUE##&#34;);
+println &#34;TemperatureTenthsCelsius=&#34;+TemperatureTenthsCelsius
+
+
+
+// return with a response code that indicates we ran successfully
+return (0);</value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>windowsscript</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>linuxscript</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>windowscmdline</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>linuxcmdline</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        </attributes>
+        <datapoints>
+        <datapoint>
+            <name>TemperatureTenthsCelsius</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>TemperatureTenthsCelsius</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>raid controller status as monitored by the remote access card; status codes are 1=other, 2=unknown, 3=ok, 4=non-critical, 5=critical, 6=non-recoverable</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>TemperatureProbeUpperCriticalThreshold</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>TemperatureProbeUpperCriticalThreshold</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>raid controller battery status as monitored by the remote access card; status codes are 1=other, 2=unknown, 3=ok, 4=non-critical, 5=critical, 6=non-recoverable</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>TemperatureProbeUpperNonCriticalThreshold</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>TemperatureProbeUpperNonCriticalThreshold</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>battery state: 1=unknown, 2=normal, 3=failed -- needs replacement, 4=battery temp is high or charge level is depleting, 5=battery missing, 6=battery recharging, 7=battery voltage/charge below threshold</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>ErrorTemperature</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>expression</postprocessormethod>
+            <postprocessorparam>if(gt(TemperatureTenthsCelsius,TemperatureProbeUpperCriticalThreshold),TemperatureTenthsCelsius / 10, 0)</postprocessorparam>
+            <usevalue></usevalue>
+             <alertexpr>&#62; 0 0 0</alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody>The DRAC on ##HOST## is reporting a component temperature of ##VALUE## °C on ##INSTANCE##. This exceeds the reported critical threshold and puts this device in a ##LEVEL## state. This started at ##START## - or ##DURATION## ago.</alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>Returns a value if the error threshold is reached. The value is the value over the threshold in degrees Celsius. This is set to 0 if there is no data collected.</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>TemperatureCelsius</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>expression</postprocessormethod>
+            <postprocessorparam>TemperatureTenthsCelsius/10</postprocessorparam>
+            <usevalue></usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>component temperature in °C</description>
+            <maxvalue></maxvalue>
+            <minvalue>0</minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>WarningTemperature</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>expression</postprocessormethod>
+            <postprocessorparam>if(gt(TemperatureTenthsCelsius,TemperatureProbeUpperNonCriticalThreshold),TemperatureTenthsCelsius / 10, 0)</postprocessorparam>
+            <usevalue></usevalue>
+            <alertexpr>&#62; 0 0</alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody>The DRAC on ##HOST## is reporting a component temperature of ##VALUE## °C on ##INSTANCE##. This exceeds the reported non-critical threshold and puts this device in a ##LEVEL## state. This started at ##START## - or ##DURATION## ago.</alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>Returns a value if the warning threshold is reached. The value is the value over the threshold in degrees Celsius. This is set to 0 if there is no data collected.</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        </datapoints>
+        <graphs>
+        <graph>
+            <name>Component Temperature</name>
+            <title>Component Temperature</title>
+            <verticallabel>°C</verticallabel>
+            <rigid>true</rigid>
+            <maxvalue>NaN</maxvalue>
+            <minvalue>0.0</minvalue>
+            <displayprio>1</displayprio>
+            <timescale>1day</timescale>
+            <base1024>false</base1024>
+            <graphdatapoints>
+        <graphdatapoint>
+            <name>TemperatureCelsius</name>
+            <datapointname>TemperatureCelsius</datapointname>
+            <cf>1</cf>
+        </graphdatapoint>
+            </graphdatapoints>
+            <graphvirtualdatapoints>
+            </graphvirtualdatapoints>
+            <graphdatas>
+            <graphdata>
+                <type>1</type>
+                <legend>Temperature</legend>
+                <color>red</color>
+                <datapointname>TemperatureCelsius</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+            </graphdata>
+            </graphdatas>
+        </graph>
+        </graphs>
+        <overviewgraphs>
+        <overviewgraph>
+            <name>Component Temperature Overview</name>
+            <title>Component Temperature Overview</title>
+            <verticallabel>°C</verticallabel>
+            <rigid>false</rigid>
+            <maxvalue>NaN</maxvalue>
+            <minvalue>0.0</minvalue>
+            <displayprio>1</displayprio>
+            <timescale>1day</timescale>
+            <base1024>false</base1024>
+            <aggregated>false</aggregated>
+            <datapoints>
+        <overviewgraphdatapoint>
+            <name>TemperatureCelsius_Adjusted</name>
+            <datapointname>TemperatureCelsius</datapointname>
+            <cf>1</cf>
+            <aggregateMethod>sum</aggregateMethod>
+        </overviewgraphdatapoint>
+            </datapoints>
+            <virtualdatapoints>
+            </virtualdatapoints>
+            <lines>
+            <overviewgraphline>
+                <type>1</type>
+                <legend>##INSTANCE##</legend>
+                <datapointname>TemperatureCelsius_Adjusted</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+                <color>blue</color>
+            </overviewgraphline>
+            </lines>
+        </overviewgraph>
+        </overviewgraphs>
+        <scripts>
+        </scripts>
+    </entry>
+</feed>

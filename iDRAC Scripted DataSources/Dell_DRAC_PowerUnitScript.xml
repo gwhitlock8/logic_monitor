@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<feed  version="1.0" hasPendingRequests="false" >
+  <company></company>
+  <status>200</status>
+  <errmsg>OK</errmsg>
+  <interval>0</interval>
+    <entry type="predatasource">
+        <version>1601308722</version>
+        <name>Dell_DRAC_PowerUnitScript</name>
+        <displayedas>Dell_DRAC_PowerUnit</displayedas>
+        <description>Power unit status via iDRAC7 and newer that supports SNMP</description>
+        <collector>script</collector>
+        <hasMultiInstances>true</hasMultiInstances>
+        <schedule>300</schedule>
+        <appliesTo>(idrac.ip)</appliesTo>
+        <wildcardauto>true</wildcardauto>
+        <wildcardpersist>false</wildcardpersist>
+        <wildcardlinuxscript>ad_script</wildcardlinuxscript>
+        <wildcardlinuxcmdline>type=&#34;embeded&#34; </wildcardlinuxcmdline>
+        <wildcardwinscript>ad_script</wildcardwinscript>
+        <wildcardwincmdline>type=&#34;embeded&#34; </wildcardwincmdline>
+        <wildcardgroovyscript>import com.santaba.agent.groovyapi.expect.Expect;
+import com.santaba.agent.groovyapi.snmp.Snmp;
+import com.santaba.agent.groovyapi.http.*;
+import com.santaba.agent.groovyapi.jmx.*;
+import org.xbill.DNS.*;
+
+def ip = hostProps.get(&#34;idrac.ip&#34;);
+def oid=&#34;.1.3.6.1.4.1.674.10892.5.4.600.10.1.7.1&#34;
+// walk the oid tree
+def snmp_walk = Snmp.walk(ip, oid);
+
+
+
+
+// iterate over each line returned by the oid tree
+snmp_walk.eachLine 
+{ line -&#62;
+line=line.replace(oid+&#39;.&#39;,&#39;&#39;)
+
+    // tokenize the line, separating the leaf oid from its value
+    tokens = line.split(/ = /, 2);
+
+    // print the value
+    println tokens[0]+&#34;##&#34;+tokens[1]
+}
+
+// return with a response code that indicates we ran successfully
+return (0);</wildcardgroovyscript>
+        <wildcardschedule>1440</wildcardschedule>
+        <wildcarddisable>false</wildcarddisable>
+        <wildcarddeleteinactive>true</wildcarddeleteinactive>
+        <agdmethod>none</agdmethod>
+        <agdparams></agdparams>
+        <group>Dell_DRAC</group>
+        <tags></tags>
+        <technology></technology>
+        <adlist><![CDATA[{"agdmethod":"none","method":"ad_script","agdparams":"","id":0,"filters":[],"params":{"type":"embeded","groovyscript":"import com.santaba.agent.groovyapi.expect.Expect;\nimport com.santaba.agent.groovyapi.snmp.Snmp;\nimport com.santaba.agent.groovyapi.http.*;\nimport com.santaba.agent.groovyapi.jmx.*;\nimport org.xbill.DNS.*;\n\ndef ip = hostProps.get(\"idrac.ip\");\ndef oid=\".1.3.6.1.4.1.674.10892.5.4.600.10.1.7.1\"\n// walk the oid tree\ndef snmp_walk = Snmp.walk(ip, oid);\n\n\n\n\n// iterate over each line returned by the oid tree\nsnmp_walk.eachLine \n{ line ->\nline=line.replace(oid+'.','')\n\n    // tokenize the line, separating the leaf oid from its value\n    tokens = line.split(/ = /, 2);\n\n    // print the value\n    println tokens[0]+\"##\"+tokens[1]\n}\n\n// return with a response code that indicates we ran successfully\nreturn (0);"}}]]></adlist>
+        <schemaVersion>2</schemaVersion>
+        <dataSourceType>1</dataSourceType>
+        <attributes>
+        <attribute>
+            <name>scripttype</name>
+            <value>embed</value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>scriptgroovy</name>
+            <value>import com.santaba.agent.groovyapi.expect.Expect;
+import com.santaba.agent.groovyapi.snmp.Snmp;
+import com.santaba.agent.groovyapi.http.*;
+import com.santaba.agent.groovyapi.jmx.*;
+import org.xbill.DNS.*;
+
+def ip = hostProps.get(&#34;idrac.ip&#34;);
+
+// walk the oid tree
+def PowerSupplyCountForRedundancy= Snmp.get(ip, &#34;.1.3.6.1.4.1.674.10892.5.4.600.10.1.6.1.&#34;+&#34;##WILDVALUE##&#34;);
+println &#34;PowerSupplyCountForRedundancy=&#34;+PowerSupplyCountForRedundancy
+def PowerUnitRedundancyStatus= Snmp.get(ip, &#34;.1.3.6.1.4.1.674.10892.5.4.600.10.1.5.1.&#34;+&#34;##WILDVALUE##&#34;);
+println &#34;PowerUnitRedundancyStatus=&#34;+PowerUnitRedundancyStatus
+def PowerUnitState= Snmp.get(ip, &#34;.1.3.6.1.4.1.674.10892.5.4.600.10.1.4.1.&#34;+&#34;##WILDVALUE##&#34;);
+println &#34;PowerUnitState=&#34;+PowerUnitState
+def PowerUnitStatus= Snmp.get(ip, &#34;.1.3.6.1.4.1.674.10892.5.4.600.10.1.8.1.&#34;+&#34;##WILDVALUE##&#34;);
+println &#34;PowerUnitStatus=&#34;+PowerUnitStatus
+
+
+
+// return with a response code that indicates we ran successfully
+return (0);</value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>windowsscript</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>linuxscript</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>windowscmdline</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>linuxcmdline</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        </attributes>
+        <datapoints>
+        <datapoint>
+            <name>PowerSupplyCountForRedundancy</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>PowerSupplyCountForRedundancy</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>how many redundant power supplies</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>PowerUnitRedundancyStatus</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>PowerUnitRedundancyStatus</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>redundancy status of the power unit: 1=other, 2=unknown, 3=full, 4=degraded, 5=lost, 6=non-redundant, 7=redundancy offline</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>PowerUnitState</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>PowerUnitState</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr>&#62; 3 4</alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody>The DRAC on ##HOST## is reporting a power unit status alert of ##VALUE## on ##INSTANCE##, which puts this device in ##LEVEL## state. This started at ##START## - or ##DURATION## ago.
+
+DRAC component status codes are as follows:
+1: other          - status is not one of the following
+2: unknown        - status unknown (possibly not monitored)
+3: ok             - normal operation
+4: nonCritical    - warning
+5: critical       - component failure
+6: nonRecoverable - component is dead</alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>state codes: 1=Unknown, 2=Enabled, 4=Not Ready, 6=Enabled and Not Ready</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>PowerUnitStatus</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>PowerUnitStatus</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr>&#62; 2 2</alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody>The DRAC on ##HOST## is reporting a power unit state of ##VALUE## on ##INSTANCE##, which puts this device in ##LEVEL## state. This started at ##START## - or ##DURATION## ago.
+
+DRAC power supply states are defined as follows:
+1: Unknown
+2: Enabled
+4: Not Ready
+6: Enabled and Not Ready</alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>power unit status as monitored by the remote access card; status codes are 1=other, 2=unknown, 3=ok, 4=non-critical, 5=critical, 6=non-recoverable</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>PowerUnitRedundancyAlert</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>expression</postprocessormethod>
+            <postprocessorparam>if(gt(PowerSupplyCountForRedundancy,1),PowerUnitRedundancyStatus,0)</postprocessorparam>
+            <usevalue></usevalue>
+            <alertexpr>&#62; 3 3</alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody>The DRAC on ##HOST## is reporting a power unit redundancy status of ##VALUE## on ##INSTANCE##, which puts this device in ##LEVEL## state. This started at ##START## - or ##DURATION## ago.
+
+Power redundancy status codes are as follows:
+0: redundancy not supported
+1: other
+2: unknown
+3: full
+4: degraded
+5: lost
+6: non-redundant
+7: redundancy offline</alertbody>
+            <enableanomalyalertsuppression></enableanomalyalertsuppression>
+            <adadvsettingenabled>false</adadvsettingenabled>
+            <warnadadvsetting></warnadadvsetting>
+            <erroradadvsetting></erroradadvsetting>
+            <criticaladadvsetting></criticaladadvsetting>
+            <description>redundancy status calculated to trigger only on power units with multiple power supplies: 0=redundancy not supported, 1=other, 2=unknown, 3=full, 4=degraded, 5=lost, 6=non-redundant, 7=redundancy offline</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        </datapoints>
+         <graphs>
+        <graph>
+            <name>Power Unit Redundancy Status</name>
+            <title>Power Unit Redundancy Status</title>
+            <verticallabel>status code - 3=fully redundant</verticallabel>
+            <rigid>false</rigid>
+            <maxvalue>7.0</maxvalue>
+            <minvalue>0.0</minvalue>
+            <displayprio>3</displayprio>
+            <timescale>1day</timescale>
+            <base1024>false</base1024>
+            <graphdatapoints>
+        <graphdatapoint>
+            <name>PowerUnitRedundancyStatus</name>
+            <datapointname>PowerUnitRedundancyStatus</datapointname>
+            <cf>1</cf>
+        </graphdatapoint>
+            </graphdatapoints>
+            <graphvirtualdatapoints>
+            </graphvirtualdatapoints>
+            <graphdatas>
+            <graphdata>
+                <type>1</type>
+                <legend>PowerUnitRedundancyStatus</legend>
+                <color>teal</color>
+                <datapointname>PowerUnitRedundancyStatus</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+            </graphdata>
+            </graphdatas>
+        </graph>
+        <graph>
+            <name>Power Unit State</name>
+            <title>Power Unit State</title>
+            <verticallabel>status code - 2=enabled</verticallabel>
+            <rigid>true</rigid>
+            <maxvalue>7.0</maxvalue>
+            <minvalue>0.0</minvalue>
+            <displayprio>2</displayprio>
+            <timescale>1day</timescale>
+            <base1024>false</base1024>
+            <graphdatapoints>
+        <graphdatapoint>
+            <name>PowerUnitState</name>
+            <datapointname>PowerUnitState</datapointname>
+            <cf>1</cf>
+        </graphdatapoint>
+            </graphdatapoints>
+            <graphvirtualdatapoints>
+            </graphvirtualdatapoints>
+            <graphdatas>
+            <graphdata>
+                <type>1</type>
+                <legend>PowerUnitState</legend>
+                <color>blue</color>
+                <datapointname>PowerUnitState</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+            </graphdata>
+            </graphdatas>
+        </graph>
+        <graph>
+            <name>Power Unit Status</name>
+            <title>Power Unit Status</title>
+            <verticallabel>status code - 3=ok</verticallabel>
+            <rigid>true</rigid>
+            <maxvalue>7.0</maxvalue>
+            <minvalue>0.0</minvalue>
+            <displayprio>1</displayprio>
+            <timescale>1day</timescale>
+            <base1024>false</base1024>
+            <graphdatapoints>
+        <graphdatapoint>
+            <name>PowerUnitStatus</name>
+            <datapointname>PowerUnitStatus</datapointname>
+            <cf>1</cf>
+        </graphdatapoint>
+            </graphdatapoints>
+            <graphvirtualdatapoints>
+            </graphvirtualdatapoints>
+            <graphdatas>
+            <graphdata>
+                <type>1</type>
+                <legend>PowerUnitStatus</legend>
+                <color>maroon</color>
+                <datapointname>PowerUnitStatus</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+            </graphdata>
+            </graphdatas>
+        </graph>
+        </graphs>
+        <overviewgraphs>
+        <overviewgraph>
+            <name>Power Unit State Overview</name>
+            <title>Power Unit State Overview</title>
+            <verticallabel>status code - 2=enabled</verticallabel>
+            <rigid>false</rigid>
+            <maxvalue>7.0</maxvalue>
+            <minvalue>0.0</minvalue>
+            <displayprio>2</displayprio>
+            <timescale>1day</timescale>
+            <base1024>false</base1024>
+            <aggregated>false</aggregated>
+            <datapoints>
+        <overviewgraphdatapoint>
+            <name>PowerUnitState</name>
+            <datapointname>PowerUnitState</datapointname>
+            <cf>1</cf>
+            <aggregateMethod>sum</aggregateMethod>
+        </overviewgraphdatapoint>
+            </datapoints>
+            <virtualdatapoints>
+            </virtualdatapoints>
+            <lines>
+            <overviewgraphline>
+                <type>1</type>
+                <legend>##INSTANCE##</legend>
+                <datapointname>PowerUnitState</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+                <color>blue</color>
+            </overviewgraphline>
+            </lines>
+        </overviewgraph>
+        <overviewgraph>
+            <name>Power Unit Status Overview</name>
+            <title>Power Unit Status Overview</title>
+            <verticallabel>status code - 3=ok</verticallabel>
+            <rigid>false</rigid>
+            <maxvalue>7.0</maxvalue>
+            <minvalue>0.0</minvalue>
+            <displayprio>1</displayprio>
+            <timescale>1day</timescale>
+            <base1024>false</base1024>
+            <aggregated>false</aggregated>
+            <datapoints>
+        <overviewgraphdatapoint>
+            <name>PowerUnitStatus</name>
+            <datapointname>PowerUnitStatus</datapointname>
+            <cf>1</cf>
+            <aggregateMethod>sum</aggregateMethod>
+        </overviewgraphdatapoint>
+            </datapoints>
+            <virtualdatapoints>
+            </virtualdatapoints>
+            <lines>
+            <overviewgraphline>
+                <type>1</type>
+                <legend>##INSTANCE##</legend>
+                <datapointname>PowerUnitStatus</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+                <color>blue</color>
+            </overviewgraphline>
+            </lines>
+        </overviewgraph>
+        </overviewgraphs>
+        <scripts>
+        </scripts>
+    </entry>
+</feed>
