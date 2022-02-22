@@ -1,0 +1,741 @@
+<!-- 
+	DYNAMIC TOKEN UPDATER v1.8
+
+	This script was created in response to users wanting a way to update groups and/or resources shown on a dashboard quickly & easily using some drop-down menus.
+	NOTE: while this script leverages standard LogicMonitor APIs and features, this script itself is not officially supported by LogicMonitor.
+
+	To use this, just add a Text widget to your dashboard and in the widget's configuration screen click the "source" view then paste in this code. You can also just clone this widget to another dashboard on the same portal.
+
+	AS NOTED BELOW, THIS CODE USES LOGICMONITOR API CALLS THAT REQUIRE A SET OF CREDENTIALS TO BE SET IN TOKENS ('apiID' & 'apiKey'), SO IF YOU EXPORT THIS DASHBOARD FOR USE ON ANOTHER PORTAL BE SURE TO REPLACE THOSE CREDENTIALS ON IMPORT!
+
+	---
+
+	PREREQUISITES:
+	There are a few dashboard tokens containing information that the Resource Selector will use:
+
+	'apiID' & 'apiKey': A valid LogicMonitor API ID and key for this portal that will be used for REST API calls. The API account will need "manage" privileges for the dashboard where the widget's being used. Note: there's a place near the top of the script section below where you can optionally hard-code these two values instead of more openly exposing them in a token.
+
+	'defaultResourceGroup': A common token used by the widgets on the dashboard. The 'Resource Group' drop-down menu will update this token.
+
+	'defaultResourceName': (optional) A common token used by widgets on a dashboard. The 'Resource' drop-down menu will update this token. If not set then the script will hide the relevant menu.
+
+	'defaultInstance': (optional) Token used by widgets on a dashboard for specifying instances to show data for. The 'Instance' drop-down menu will update this token upon clicking Go. Note that if you want to use the 'Instances' menu, it requires a named resource and a datasource to fetch instances for. If the 'defaultInstance' token or 'defaultDatasource' tokens aren't defined on the dashboard OR the 'Resource' menu is set to "*" then the 'Instance' menu will be hidden.
+
+	'dynamicGroupParentID': (optional) The numeric ID of a parent group you want to limit the dynamic group drop-down to. Will default to the root group (ID 1) if not specified.
+
+	'defaultDatasource': (optional) Name of a datasource that will be used for gathering instances that dynamically populate the 'Instances' drop-down menu.
+
+	'hideDynamicGroupDropdown' or 'hideDynamicResourceDropdown' or 'hideDynamicInstanceDropdown': (optional) can be set to "true" to force the 'Resource Group', 'Resource', or 'Instance' drop-down (respectively) to be hidden. This allows the widget to be flexible for choosing a group, a resource, an instance, or any of them.
+	
+
+	SO HOW DOES THIS WORK?
+
+	When this Text widget is first loaded, Javascript embedded in the HTML source makes a call to the LogicMonitor REST API to get a list of resource groups to populate options in the "Resource Group" drop-down. A list of resources within the selected group is then fetched to populate the Resource drop-down.
+
+	When the 'Resource Group' menu is changed (if shown), the 'Resource' drop-down list will auto-update to reflect what's inside the newly chosen group. When the 'Resource' menu is changed, the 'Instance' drop-down list will auto-populate with a list of instances for the chosen resource for the datasource specified in the 'defaultDatasource' token.
+
+	When the Go button is clicked, the script does the following actions:
+	1. Makes note of the current dashboard's URL and ID.
+	2. Calls LogicMonitor's "Get Dashboard" REST method to get the current dashboard definition.
+	3. Loops through the dashboard's tokens retrieved during step #2 looking for 'defaultResourceGroup', 'defaultResourceName', and 'defaultInstance'. If found, it updates them in memory with the values chosen on the drop-downs (unless the respective field was set to be hidden).
+	4. Calls LogicMonitor's "Update Dashboard" REST method to save the new token values.
+	5. Refreshes the page to reflect the new values.
+-->
+<link href="https://static-prod.logicmonitor.com/sbui133-1/commons/stylesheets2/startup.css?v=220429" rel="stylesheet" />
+<style type="text/css">#pickerControls {margin-top: 5px;}
+	#pickerControls p {margin: 5px 3px;}
+	#pickerControls td {padding: 5px 3px;}
+</style>
+<div id="pickerControls">
+<table>
+	<tbody>
+		<tr id="groupPickerControls">
+			<td><label for="groupPicker">Resource Group:</label></td>
+			<td><select id="groupPicker" onchange="populateResourceDropdown();"><option value="*">*</option></select></td>
+		</tr>
+		<tr id="resourcePickerControls">
+			<td><label for="resourcePicker">Resource:</label></td>
+			<td><select id="resourcePicker" onchange="populateInstanceDropdown();"><option value="*">*</option></select>
+			<div class="loadingcircles32 loading-icon" id="resourcePickerThrobber" style="position:fixed; margin-top:-5px; display: none;">
+			<div class="circle32-gray circle32_01">&nbsp;</div>
+
+			<div class="circle32-gray circle32_02">&nbsp;</div>
+
+			<div class="circle32-gray circle32_03">&nbsp;</div>
+
+			<div class="circle32-gray circle32_04">&nbsp;</div>
+
+			<div class="circle32-gray circle32_05">&nbsp;</div>
+
+			<div class="circle32-gray circle32_06">&nbsp;</div>
+
+			<div class="circle32-gray circle32_07">&nbsp;</div>
+
+			<div class="circle32-gray circle32_08">&nbsp;</div>
+			</div>
+			</td>
+		</tr>
+		<tr id="instancePickerControls">
+			<td><label for="instancePicker">Instance:</label></td>
+			<td><select id="instancePicker"><option value="*">*</option></select>
+			<div class="loadingcircles32 loading-icon" id="instancePickerThrobber" style="position:fixed; margin-top:-5px; display: none;">
+			<div class="circle32-gray circle32_01">&nbsp;</div>
+
+			<div class="circle32-gray circle32_02">&nbsp;</div>
+
+			<div class="circle32-gray circle32_03">&nbsp;</div>
+
+			<div class="circle32-gray circle32_04">&nbsp;</div>
+
+			<div class="circle32-gray circle32_05">&nbsp;</div>
+
+			<div class="circle32-gray circle32_06">&nbsp;</div>
+
+			<div class="circle32-gray circle32_07">&nbsp;</div>
+
+			<div class="circle32-gray circle32_08">&nbsp;</div>
+			</div>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<p><button class="lm-button small blue animate" onclick="updateDashboard();">Go</button></p>
+</div>
+<script>
+	// (OPTIONAL) You can set values for the ID and key needed for the LogicMonitor REST API calls inside the quotes of the two lines below. This allows the API keys to not be as visibly exposed. If either value (ID or key) is set as a dashboard token then it will override the value set here.
+	var apiID = ""
+	var apiKey = ""
+
+	// Maximum number of groups and resources to retrieve...
+	const maxGroups = 500
+	const maxResources = 100
+	// const vmPerfDatasourceName = "VMware_vCenter_VMPerformance"
+	// ---
+
+	// Capture information from specific dashboard tokens we'll be using...
+
+	// Capture our API credentials from token...
+	var apiIDToken = "##apiID##"
+	var apiKeyToken = "##apiKey##"
+	// If the token values weren't set then use the values hard-coded above in this script...
+	if (apiIDToken != "\#\#apiID\#\#") {
+		apiID = apiIDToken
+	}
+	if (apiKeyToken != "\#\#apiKey\#\#") {
+		apiKey = apiKeyToken
+	}
+
+	// The names of the tokens we'll be updating...
+	const defaultResourceGroupTokenName = "defaultResourceGroup"
+	const defaultResourceNameTokenName = "defaultResourceName"
+	const defaultInstanceTokenName = "defaultInstance"
+    const storeIDTokenName = "storeID"
+	// Capture the current values of the tokens...
+	// (Like any token inserted into the Text widget, LogicMonitor automatically inserts these token values as the page is being rendered so Javascript is able to pick them as if the values were there originally. If a token isn't set then the variable's value will be literally what's shown below, including the double-hashtags.)
+	var defaultResourceGroupInitialValue = "##defaultResourceGroup##"
+	var defaultResourceNameInitialValue = "##defaultResourceName##"
+	var defaultInstanceInitialValue = "##defaultInstance##"
+	var defaultDatasourceInitialValue = "##defaultDatasource##"
+    var storeIDInitialValue = "##storeID##"
+	var dynamicGroupParentID = "##dynamicGroupParentID##"
+	var hideDynamicGroupDropdown = "##hideDynamicGroupDropdown##"
+	var hideDynamicResourceDropdown = "##hideDynamicResourceDropdown##"
+	var hideDynamicInstanceDropdown = "##hideDynamicInstanceDropdown##"
+	// The 'dynamicGroupParentID' is an optional token the user can set to limit the group list to a specific parent. Use the root group (ID 1) if the token wasn't set...
+	if (isNaN(dynamicGroupParentID)) {
+		dynamicGroupParentID = 1
+	}
+
+	// Prep variables to capture/set 'defaultResourceGroup' tokens...
+	var processGroupToken = true
+	// Hide the Resource Group menu if a "hideDynamicGroupDropdown" token is set to "true"...
+	if (hideDynamicGroupDropdown == "true") {
+		// Hide the menu...
+		document.querySelector("#groupPickerControls").style.display = "none"
+
+		processGroupToken = false
+	}
+
+	// Prep variables to capture/set 'defaultResourceName' tokens...
+	var processResourceToken = true
+	// Hide the Resource menu if a "defaultResourceName" token wasn't preset or if a "hideDynamicResourceDropdown" token is set to "true"...
+	if (defaultResourceNameInitialValue == "\#\#defaultResourceName\#\#" || hideDynamicResourceDropdown == "true") {
+		// Hide the menu...
+		document.querySelector("#resourcePickerControls").style.display = "none"
+
+		processResourceToken = false
+	}
+
+	// Prep variables to capture/set 'defaultInstance' tokens...
+	var processInstanceToken = true
+	// Hide the Instance menu if "defaultInstance" or "defaultDatasource" tokens weren't preset, or if a "hideDynamicInstanceDropdown" token is set to "true"...
+	if (defaultInstanceInitialValue == "\#\#defaultInstance\#\#" || defaultDatasourceInitialValue == "\#\#defaultDatasource\#\#" || defaultResourceNameInitialValue == "*" || hideDynamicInstanceDropdown == "true") {
+		// Hide the menu...
+		// document.querySelector("#instancePickerControls").style.display = "none"
+		showInstanceFields(false)
+
+		processInstanceToken = false
+
+		// Default our instance value...
+		defaultInstanceInitialValue = "*"
+	}
+
+	// ---
+
+	// Capture information about the current dashboard for use in subsequent REST calls...
+	var hostName = parent.window.location.host
+	var locationHash = parent.window.location.hash // example result: "#dashboard=21"
+	var dashboardID = locationHash.replace("#dashboard=", "")
+
+	// Encoder to convert strings to Uint8Array for API signatures...
+	var enc = new TextEncoder("utf-8")
+
+	// Populate the drop-downs...
+	if (processGroupToken) {
+		populateGroupDropdown()
+	} else if (processResourceToken) {
+		populateResourceDropdown()
+	} else {
+		populateInstanceDropdown()
+	}
+
+	// ----- FUNCTIONS
+
+	// Function processing status of Fetch calls...
+	function status(response) {
+	  if (response.status >= 200 && response.status < 300) {
+	    return Promise.resolve(response)
+	  } else {
+	    return Promise.reject(new Error(response.statusText))
+	  }
+	}
+
+
+	// Pre-processor for JSON responses from Fetch calls...
+	function json(response) {
+	  return response.json()
+	}
+
+
+	function showInstanceFields(visible) {
+		if (visible) {
+			// Show the menu...
+			document.querySelector("#instancePickerControls").style.display = "contents"
+		} else {
+			// Hide the menu...
+			document.querySelector("#instancePickerControls").style.display = "none"
+		}
+	}
+
+
+	// Function for retrieving a list of groups from LogicMonitor and populating the appropriate drop-down...
+	function populateGroupDropdown() {
+		// Request Details...
+		var httpVerb = "GET"
+		var epoch = (new Date).getTime()
+		var resourcePath = "/device/groups"
+		var queryParams = "?sort=fullPath&fields=id,fullPath&size=" + maxGroups + "&filter=numOfHosts>0"
+
+		// Construct signature... 
+		var requestVars = httpVerb + epoch + resourcePath
+
+		// Prep our URL & query for the REST call (note: the query is set to exclude empty groups)...
+		if (dynamicGroupParentID != 1) {
+			// If a parent group was defined...
+			var queryParams = queryParams + ",parentId:" + dynamicGroupParentID
+		}
+		var apiURL = "https://" + hostName + "/santaba/rest" + resourcePath + queryParams
+
+		// Create our API signature...
+		window.crypto.subtle.importKey(
+		    "raw", // raw format of the key - should be Uint8Array
+		    enc.encode(apiKey),
+		    { // algorithm details
+		        name: "HMAC",
+		        hash: {name: "SHA-256"}
+		    },
+		    false, // export = false
+		    ["sign", "verify"] // what this key can do
+		).then( key => {
+		    window.crypto.subtle.sign(
+		        "HMAC",
+		        key,
+		        enc.encode(requestVars)
+		    ).then(signature => {
+		        var b = new Uint8Array(signature)
+		        var hmacX = Array.prototype.map.call(b, x => ('00'+x.toString(16)).slice(-2)).join("")
+		        var signature = btoa(hmacX)
+
+		        // Construct auth header...
+		        var auth = "LMv1 " + apiID + ":" + signature + ":" + epoch
+
+		        // We now have what's needed for LMv1 API Token authentication. Let's make our API call...
+
+				// Call the LogicMonitor API to get a list of groups...
+				fetch(apiURL, {
+					method: httpVerb,
+					headers: {
+						'Content-Type': 'application/json;charset=utf-8',
+						'Authorization': auth
+					},
+				})
+				.then(status)
+				.then(json)
+				.then(function(data) {
+					// console.log('Group request succeeded with JSON response', data)
+
+					// Populate the alert groups drop-down...
+					data.data.items.forEach(thisItem => {
+						if (thisItem.fullPath != "") {
+							var option = document.createElement("option")
+							option.text = thisItem.fullPath
+							option.value = thisItem.fullPath
+							option.setAttribute("data-id", thisItem.id)
+							// As we loop through, pre-select the group that matches the dashboard's current token...
+							if (thisItem.fullPath == defaultResourceGroupInitialValue) {
+								option.selected = true
+							}
+							// Add the option to the drop-down...
+							document.getElementById("groupPicker").add(option)
+						}
+					})
+
+					// Update the resource drop-down (if appropriate)...
+					if (processResourceToken) {
+						populateResourceDropdown()
+					}
+				})
+		    })
+		})
+	}
+
+
+	function populateResourceDropdown() {
+		// Reset the drop-down menu between refreshes (but leave "*" as the top option)...
+		for (var i = document.getElementById("resourcePicker").options.length; i > 0; i--) {
+			document.getElementById("resourcePicker").remove(i)
+		}
+
+		var selectedGroup = defaultResourceGroupInitialValue
+		if (processGroupToken) {
+			// Get the value of the Resource Group drop-down...
+			var selectedGroup = document.getElementById("groupPicker").value
+		}
+
+		// Display the loading icon...
+		document.querySelector("#resourcePickerThrobber").style.display = "inline-block"
+
+		// Get resources...
+
+		// Request Details...
+		var httpVerb = "GET"
+		var epoch = (new Date).getTime()
+		var resourcePath = "/device/devices"
+		var queryParams = "?sort=displayName&size=" + maxResources + "&fields=id,displayName,systemProperties"
+		if (selectedGroup != "*") {
+			queryParams = queryParams + "&filter=systemProperties.name:system.groups,systemProperties.value~" + selectedGroup
+		}
+
+		// Construct signature... 
+		var requestVars = httpVerb + epoch + resourcePath
+
+		// Prep our URL & query for the REST call...
+		var apiURL = "https://" + hostName + "/santaba/rest" + resourcePath + queryParams
+
+		// Create our API signature...
+		window.crypto.subtle.importKey(
+		    "raw", // raw format of the key - should be Uint8Array
+		    enc.encode(apiKey),
+		    { // algorithm details
+		        name: "HMAC",
+		        hash: {name: "SHA-256"}
+		    },
+		    false, // export = false
+		    ["sign", "verify"] // what this key can do
+		).then( key => {
+		    window.crypto.subtle.sign(
+		        "HMAC",
+		        key,
+		        enc.encode(requestVars)
+		    ).then(signature => {
+		        var b = new Uint8Array(signature)
+		        var hmacX = Array.prototype.map.call(b, x => ('00'+x.toString(16)).slice(-2)).join("")
+		        var signature = btoa(hmacX)
+
+		        // Construct auth header...
+		        var auth = "LMv1 " + apiID + ":" + signature + ":" + epoch
+
+		        // We now have what's needed for LMv1 API Token authentication. Let's make our API call...
+
+				// Call the LogicMonitor API to get a list of the group's resources...
+				fetch(apiURL, {
+					method: httpVerb,
+					headers: {
+						'Content-Type': 'application/json;charset=utf-8',
+						'Authorization': auth
+					},
+				})
+				.then(status)
+				.then(json)
+				.then(function(data) {
+					// console.log('Resource request succeeded with JSON response', data)
+
+					// Populate the drop-down...
+					data.data.items.forEach(thisItem => {
+						if (thisItem.fullPath != "") {
+							var option = document.createElement("option")
+							option.text = thisItem.displayName
+							option.value = thisItem.displayName
+							option.setAttribute("data-id", thisItem.id)
+							// As we loop through, pre-select the resource that matches the dashboard's current token...
+							if (thisItem.displayName == defaultResourceNameInitialValue) {
+								option.selected = true
+							}
+							// Add the option to the drop-down...
+							document.getElementById("resourcePicker").add(option)
+						}
+					})
+
+					// Hide the loading icon...
+					document.querySelector("#resourcePickerThrobber").style.display = "none"
+
+					// if (processInstanceToken) {
+						populateInstanceDropdown()
+					// }
+				})
+		    })
+		})
+	}
+
+
+	function populateInstanceDropdown() {
+		if (processInstanceToken && document.getElementById("resourcePicker").value != "*") {
+
+			showInstanceFields(true)
+
+			// Reset the drop-down menu between refreshes (but leave "*" as the top option)...
+			for (var i = document.getElementById("instancePicker").options.length; i > 0; i--) {
+				document.getElementById("instancePicker").remove(i)
+			}
+
+			var selectedGroup = defaultResourceGroupInitialValue
+			var selectedResource = defaultResourceNameInitialValue
+			var selectedResourceID = 0
+			if (processGroupToken) {
+				// Get the value of the Resource Group drop-down...
+				selectedGroup = document.getElementById("groupPicker").value
+			} else {
+				selectedGroup = "*"
+			}
+			if (processResourceToken) {
+				// Get the ID of the selected item on the Resource drop-down...
+				selectedResourceID = document.getElementById("resourcePicker")[document.getElementById("resourcePicker").selectedIndex].getAttribute("data-id")
+			}
+
+			// Display the loading icon...
+			document.querySelector("#instancePickerThrobber").style.display = "inline-block"
+
+			// Get ID of our default datasource (the ID is different than the datasource URI seen in the LogicMonitor portal)...
+
+			// Request Details...
+			var httpVerb = "GET"
+			var epoch = (new Date).getTime()
+			var resourcePath = "/device/devices/" + selectedResourceID + '/devicedatasources'
+			var queryParams = "?sort=displayName&size=" + maxResources + "&fields=id,dataSourceName,instanceNumber&filter=dataSourceName:" + defaultDatasourceInitialValue
+			// if (selectedGroup != "*") {
+			// 	queryParams = queryParams + "&filter=dataSourceName:" + defaultDatasourceInitialValue
+			// }
+
+			// Construct signature... 
+			var requestVars = httpVerb + epoch + resourcePath
+
+			// Prep our URL & query for the REST call...
+			var apiURL = "https://" + hostName + "/santaba/rest" + resourcePath + queryParams
+
+			// Create our API signature...
+			window.crypto.subtle.importKey(
+			    "raw", // raw format of the key - should be Uint8Array
+			    enc.encode(apiKey),
+			    { // algorithm details
+			        name: "HMAC",
+			        hash: {name: "SHA-256"}
+			    },
+			    false, // export = false
+			    ["sign", "verify"] // what this key can do
+			).then( key => {
+			    window.crypto.subtle.sign(
+			        "HMAC",
+			        key,
+			        enc.encode(requestVars)
+			    ).then(signature => {
+			        var b = new Uint8Array(signature)
+			        var hmacX = Array.prototype.map.call(b, x => ('00'+x.toString(16)).slice(-2)).join("")
+			        var signature = btoa(hmacX)
+
+			        // Construct auth header...
+			        var auth = "LMv1 " + apiID + ":" + signature + ":" + epoch
+
+			        // We now have what's needed for LMv1 API Token authentication. Let's make our API call...
+
+					// Call the LogicMonitor API to get a list of the group's resources...
+					fetch(apiURL, {
+						method: httpVerb,
+						headers: {
+							'Content-Type': 'application/json;charset=utf-8',
+							'Authorization': auth
+						},
+					})
+					.then(status)
+					.then(json)
+					.then(function(data) {
+						// console.log('Datasource request succeeded with JSON response', data)
+
+						var vmPerfDatasourceID = 0
+
+						// Populate the drop-down...
+						data.data.items.forEach(thisItem => {
+							// Check to make sure we have a numeric datasource ID...
+							if (!isNaN(thisItem.id)) {
+								vmPerfDatasourceID = thisItem.id
+							}
+						})
+						// console.log('Datasource ID: ' + vmPerfDatasourceID)
+
+
+						// Get list of instance names for the datasource...
+
+
+						// Request Details...
+						var httpVerb = "GET"
+						var epoch = (new Date).getTime()
+						// /device/devices/{deviceId}/devicedatasources/{deviceDatasourceId}/instances
+						var resourcePath = "/device/devices/" + selectedResourceID + '/devicedatasources/' + vmPerfDatasourceID + '/instances'
+						var queryParams = "?sort=displayName&size=" + maxResources + "&fields=id,name,displayName"
+
+						// Construct signature... 
+						var requestVars = httpVerb + epoch + resourcePath
+
+						// Prep our URL & query for the REST call...
+						var apiURL = "https://" + hostName + "/santaba/rest" + resourcePath + queryParams
+
+						// Create our API signature...
+						window.crypto.subtle.importKey(
+						    "raw", // raw format of the key - should be Uint8Array
+						    enc.encode(apiKey),
+						    { // algorithm details
+						        name: "HMAC",
+						        hash: {name: "SHA-256"}
+						    },
+						    false, // export = false
+						    ["sign", "verify"] // what this key can do
+						).then( key => {
+						    window.crypto.subtle.sign(
+						        "HMAC",
+						        key,
+						        enc.encode(requestVars)
+						    ).then(signature => {
+						        var b = new Uint8Array(signature)
+						        var hmacX = Array.prototype.map.call(b, x => ('00'+x.toString(16)).slice(-2)).join("")
+						        var signature = btoa(hmacX)
+
+						        // Construct auth header...
+						        var auth = "LMv1 " + apiID + ":" + signature + ":" + epoch
+
+						        // We now have what's needed for LMv1 API Token authentication. Let's make our API call...
+
+								// Call the LogicMonitor API to get a list of the group's resources...
+								fetch(apiURL, {
+									method: httpVerb,
+									headers: {
+										'Content-Type': 'application/json;charset=utf-8',
+										'Authorization': auth
+									},
+								})
+								.then(status)
+								.then(json)
+								.then(function(data) {
+									// console.log('Instance request succeeded with JSON response', data)
+
+									// Populate the drop-down...
+									data.data.items.forEach(thisItem => {
+										if (thisItem.fullPath != "") {
+											var option = document.createElement("option")
+											option.text = thisItem.displayName
+											// Set the option value to the instance name and escape any backslashes...
+											option.value = thisItem.displayName.replace("\\", "\\\\")
+											option.setAttribute("data-id", thisItem.id)
+											// As we loop through, pre-select the instance that matches the dashboard's current token...
+											if (thisItem.displayName == defaultInstanceInitialValue) {
+												option.selected = true
+											}
+											// Add the option to the drop-down...
+											document.getElementById("instancePicker").add(option)
+										}
+									})
+
+									// console.log('Datasource ID: ' + vmPerfDatasourceID)
+
+									// Hide the loading icon...
+									document.querySelector("#instancePickerThrobber").style.display = "none"
+								})
+						    })
+						})
+
+
+
+						// Hide the loading icon...
+						document.querySelector("#instancePickerThrobber").style.display = "none"
+					})
+			    })
+			})
+		} else {
+			showInstanceFields(false)
+		}
+	}
+
+
+	function updateDashboard() {
+		// Get the selected values of our drop-down menus...
+		var newResourceGroup = document.getElementById("groupPicker").value
+        var newStoreID = newResourceGroup.substring(7,10)
+		var newResource = document.getElementById("resourcePicker").value
+		var newInstance = document.getElementById("instancePicker").value
+
+		// Request Details...
+		var httpVerb = "GET"
+		var epoch = (new Date).getTime()
+		var resourcePath = "/dashboard/dashboards/" + dashboardID
+		var queryParams = ""
+
+		// Construct signature...
+		var requestVars = httpVerb + epoch + resourcePath
+
+		// Prep our URL & query for the REST call...
+		var apiURL = "https://" + hostName + "/santaba/rest" + resourcePath + queryParams
+
+		// Create our API signature...
+		window.crypto.subtle.importKey(
+		    "raw", // raw format of the key - should be Uint8Array
+		    enc.encode(apiKey),
+		    { // algorithm details
+		        name: "HMAC",
+		        hash: {name: "SHA-256"}
+		    },
+		    false, // export = false
+		    ["sign", "verify"] // what this key can do
+		).then( key => {
+		    window.crypto.subtle.sign(
+		        "HMAC",
+		        key,
+		        enc.encode(requestVars)
+		    ).then(signature => {
+		        var b = new Uint8Array(signature)
+		        var hmacX = Array.prototype.map.call(b, x => ('00'+x.toString(16)).slice(-2)).join("")
+		        var signature = btoa(hmacX)
+
+		        // Construct auth header...
+		        var auth = "LMv1 " + apiID + ":" + signature + ":" + epoch
+
+		        // We now have what's needed for LMv1 API Token authentication. Let's make our API call...
+
+				// Call the API to get the current dashboard definition...
+				fetch(apiURL, {
+					method: httpVerb,
+					headers: {
+						'Content-Type': 'application/json;charset=utf-8',
+						'Authorization': auth
+					},
+				})
+				.then(status)
+				.then(json)
+				.then(function(data) {
+					// console.log('Get Dashboard request succeeded with JSON response', data)
+
+					// Loop through the dashboard's tokens looking for the one(s) we want to change...
+					data.data.widgetTokens.forEach(thisToken => {
+						// Resource group...
+						if (processGroupToken && thisToken.name == defaultResourceGroupTokenName) {
+							thisToken.value = newResourceGroup
+						}
+                        // StoreID...
+                        if (processGroupToken && thisToken.name == storeIDTokenName) {
+							thisToken.value = newStoreID
+                        }
+						// Resource...
+						if (processResourceToken && thisToken.name == defaultResourceNameTokenName) {
+							thisToken.value = newResource
+						}
+						// Instance...
+						if (processInstanceToken && document.getElementById("resourcePicker").value != "*" && thisToken.name == defaultInstanceTokenName) {
+							thisToken.value = newInstance
+						}
+					})
+
+			        // Build the JSON body we'll be posting to update the dashboard data...
+			        var dashData = data.data
+			        postBody = JSON.stringify({"groupId":dashData.groupId, "widgetsConfig":dashData.widgetsConfig, "name":dashData.name, "description":dashData.description, "sharable":dashData.sharable, "owner":dashData.owner, "groupName":dashData.groupName, "useDynamicWidget":dashData.useDynamicWidget, "widgetTokens":dashData.widgetTokens})
+
+					// Prep details for the call to update the dashboard...
+					httpVerb = "PUT"
+					var epoch = (new Date).getTime()
+					var resourcePath = "/dashboard/dashboards/" + dashboardID
+					var queryParams = ""
+
+					// Construct signature... 
+					var requestVars = httpVerb + epoch + postBody + resourcePath
+
+					// Prep our URL & query for the REST call...
+					var apiURL = "https://" + hostName + "/santaba/rest" + resourcePath + queryParams
+
+					// Create our API signature...
+					window.crypto.subtle.importKey(
+					    "raw", // raw format of the key - should be Uint8Array
+					    enc.encode(apiKey),
+					    { // algorithm details
+					        name: "HMAC",
+					        hash: {name: "SHA-256"}
+					    },
+					    false, // export = false
+					    ["sign", "verify"] // what this key can do
+					).then( key => {
+					    window.crypto.subtle.sign(
+					        "HMAC",
+					        key,
+					        enc.encode(requestVars)
+					    ).then(signature => {
+					        var b = new Uint8Array(signature)
+					        var hmacX = Array.prototype.map.call(b, x => ('00'+x.toString(16)).slice(-2)).join("")
+					        var signature = btoa(hmacX)
+
+					        // Construct auth header...
+					        var auth = "LMv1 " + apiID + ":" + signature + ":" + epoch
+
+					        // We now have what's needed for LMv1 API Token authentication. Let's make our API call...
+
+							// Update the dashboard definition via API...
+							fetch(apiURL, {
+								method: httpVerb,
+								headers: {
+									'Content-Type': 'application/json; charset=UTF-8',
+									'Authorization': auth
+								},
+								body: postBody
+							})
+							.then(json)
+							.then(function(data) {
+								// console.log('Update Dashboard request succeeded with JSON response', data)
+
+								// Reload the page to reflect the new token values...
+								parent.location.reload()
+							})
+							.catch(function(error) {
+								console.log('Request failed', error)
+							})
+					    })
+					})
+				})
+		    })
+		})
+	}
+</script>
