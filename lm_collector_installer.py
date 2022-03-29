@@ -8,9 +8,9 @@ import os, stat
 
 # Configure API key authorization: LMv1
 configuration = logicmonitor_sdk.Configuration()
-configuration.company = 'lmgavinwhitlock'
-configuration.access_id = '9CGE866Pg5yZ27mY3Wa4'
-configuration.access_key = '47-6F8^Gjz32Rz+zwkr)32YJqDW{b)p~VXqdC~V='
+configuration.company = 'COMPANY'
+configuration.access_id = 'LMACCESSID'
+configuration.access_key = 'LMACCESSKEY'
 
 # create an instance of the API class
 api_instance = logicmonitor_sdk.LMApi(logicmonitor_sdk.ApiClient(configuration))
